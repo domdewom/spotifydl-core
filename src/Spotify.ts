@@ -1,8 +1,9 @@
 import { promises, unlink } from 'fs-extra'
 import SpotifyApi, { IAuth, UserObjectPublic } from './lib/API'
-import Artist from './lib/details/Atrist'
+import Artist from './lib/details/Artist'
 import Playlist from './lib/details/Playlist'
 import SongDetails from './lib/details/Track'
+import EpisodeDetails from './lib/details/Episode'
 import { downloadYT, downloadYTAndSave } from './lib/download'
 import SpotifyDlError from './lib/Error'
 import getYtlink from './lib/getYtlink'
@@ -21,6 +22,16 @@ export default class SpotifyFetcher extends SpotifyApi {
     getTrack = async (url: string): Promise<SongDetails> => {
         await this.verifyCredentials()
         return await this.extractTrack(this.getID(url))
+    }
+
+    /**
+     * Get the episode details of the given track URL
+     * @param url
+     * @returns {EpisodeDetails} Track
+     */
+    getEpisode = async (url: string): Promise<EpisodeDetails> => {
+        await this.verifyCredentials()
+        return await this.extractEpisode(this.getID(url))
     }
 
     /**
@@ -108,6 +119,34 @@ export default class SpotifyFetcher extends SpotifyApi {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         return data as any
     }
+
+
+     /**
+     * Downloads the given spotify track
+     * @param url Url to download
+     * @param filename file to save to
+     * @returns `buffer` if no filename is provided and `string` if it is
+     */
+     downloadEpisode = async <T extends undefined | string>(
+        url: string,
+        filename?: T
+    ): Promise<T extends undefined ? Buffer : string> => {
+        await this.verifyCredentials()
+        const info = await this.getEpisode(url)
+        const link = await getYtlink(`${info.name} ${info.artists[0]}`)
+        if (!link) throw new SpotifyDlError(`Couldn't get a download URL for the track: ${info.name}`)
+        const data = await downloadYTAndSave(link, filename)
+        await metadata(info, data)
+        if (!filename) {
+            const buffer = await promises.readFile(data)
+            unlink(data)
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            return buffer as any
+        }
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        return data as any
+    }
+
 
     /**
      * Gets the Buffer of track from the info

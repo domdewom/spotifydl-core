@@ -6,6 +6,14 @@ export interface ITrack {
     cover_url: string
 }
 
+export interface IEpisode {
+    name: string
+    artists: string[]
+    show_name: string
+    release_date: string
+    cover_url: string
+}
+
 export interface IPlaylist {
     name: string
     total_tracks: number

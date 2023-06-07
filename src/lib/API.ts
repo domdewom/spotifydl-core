@@ -1,7 +1,8 @@
 import SpotifyAPI from 'spotify-web-api-node'
-import Artist from './details/Atrist'
+import Artist from './details/Artist'
 import Playlist from './details/Playlist'
 import TrackDetails from './details/Track'
+import EpisodeDetails from './details/Episode'
 
 const MAX_LIMIT_DEFAULT = 50
 const REFRESH_ACCESS_TOKEN_SECONDS = 55 * 60
@@ -49,6 +50,20 @@ export default class SpotifyApi {
         details.album_name = data.album.name
         details.release_date = data.album.release_date
         details.cover_url = data.album.images[0].url
+        return details
+    }
+
+    //get episode details
+    extractEpisode = async (episodeId: string): Promise<EpisodeDetails> => {
+        const data = (await this.spotifyAPI.getEpisode(episodeId)).body
+        const details = new EpisodeDetails()
+        details.name = data.name
+        data.artists.forEach((artist) => {
+            details.artists.push(artist.name)
+        })
+        details.show_name = data.show.name
+        details.release_date = data.show.release_date
+        details.cover_url = data.show.images[0].url
         return details
     }
 
